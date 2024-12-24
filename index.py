@@ -11,11 +11,11 @@ tasks_list = None
 
 # Функция, отвечающая за внесение актуальных данных из файла tasks.txt в переменную tasks_list при старте сервера
 def update_tasks_list():
+    file = open("tasks.txt", "w")
     # Если файл tasks.txt пустой - функция поместит в него валидный json синтаксис для последующего парсинга
     if os.path.getsize('tasks.txt') == 0:
-        file = open('tasks.txt', 'w')
         file.write('[]')
-        file.close()
+    file.close()
     global tasks_list
     with open("tasks.txt") as file:
         tasks_list = json.load(file)
