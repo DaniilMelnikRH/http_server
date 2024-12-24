@@ -6,8 +6,6 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-tasks_list = None
-
 
 # Функция, отвечающая за внесение актуальных данных из файла tasks.txt в переменную tasks_list при старте сервера
 def update_tasks_list():
