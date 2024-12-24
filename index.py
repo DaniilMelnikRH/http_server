@@ -2,7 +2,7 @@ import json
 import os
 import random
 
-from flask import Flask, request, jsonify
+from flask import Flask, request
 
 app = Flask(__name__)
 
@@ -47,7 +47,7 @@ def add_task():
 # Получение списка всех задач
 @app.route('/tasks', methods=['GET'])
 def get_tasks():
-    return jsonify(tasks_list)
+    return tasks_list
 
 
 # Отметка о выполнении задачи
