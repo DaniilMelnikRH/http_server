@@ -28,6 +28,11 @@ def update_tasks_txt():
 
 class HTTPServer_RequestHandler(BaseHTTPRequestHandler):
 
+    def _set_response(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.end_headers()
+
     def do_POST(self):
         # Создание задачи
         if self.path == "/tasks":
@@ -45,9 +50,7 @@ class HTTPServer_RequestHandler(BaseHTTPRequestHandler):
             tasks_list.append(new_task)
             update_tasks_txt()
 
-            self.send_response(200)
-            self.send_header("Content-type", "application/json")
-            self.end_headers()
+            self._set_response()
             self.wfile.write(str(new_task).encode('utf8'))
 
         # Отметка о выполнении задачи
@@ -67,9 +70,7 @@ class HTTPServer_RequestHandler(BaseHTTPRequestHandler):
     # Получение списка всех задач
     def do_GET(self):
         if self.path == "/tasks":
-            self.send_response(200)
-            self.send_header("Content-type", "application/json")
-            self.end_headers()
+            self._set_response()
             self.wfile.write(str(tasks_list).encode('utf8'))
 
 
