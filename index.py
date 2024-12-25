@@ -2,18 +2,18 @@ import json
 import os
 import random
 
-from flask import Flask, request
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-app = Flask(__name__)
+tasks_list = []
 
 
 # Функция, отвечающая за внесение актуальных данных из файла tasks.txt в переменную tasks_list при старте сервера
 def update_tasks_list():
-    file = open("tasks.txt", "w")
     # Если файл tasks.txt пустой - функция поместит в него валидный json синтаксис для последующего парсинга
     if os.path.getsize('tasks.txt') == 0:
+        file = open("tasks.txt", "w")
         file.write('[]')
-    file.close()
+        file.close()
     global tasks_list
     with open("tasks.txt") as file:
         tasks_list = json.load(file)
@@ -26,42 +26,58 @@ def update_tasks_txt():
     file.close()
 
 
-# Создание задачи
-@app.route("/tasks", methods=["POST"])
-def add_task():
-    data = request.get_json()
-    new_task = {
-        "title": data["title"],
-        "priority": data["priority"],
-        "isDone": "False",
-        "id": round(random.randint(1, 10000))
-    }
+class HTTPServer_RequestHandler(BaseHTTPRequestHandler):
 
-    tasks_list.append(new_task)
-    update_tasks_txt()
-    return new_task
+    def do_POST(self):
+        # Создание задачи
+        if self.path == "/tasks":
 
+            content_length = int(self.headers['Content-Length'])  # <--- Gets the size of data
+            data = json.loads(self.rfile.read(content_length).decode("utf-8"))  # <--- Gets the data itself
+            print(data)
 
-# Получение списка всех задач
-@app.route('/tasks', methods=['GET'])
-def get_tasks():
-    return tasks_list
+            new_task = {
+                "title": data["title"],
+                "priority": data["priority"],
+                "isDone": "False",
+                "id": round(random.randint(1, 10000))
+            }
 
-
-# Отметка о выполнении задачи
-@app.route("/tasks/<id>/complete", methods=["POST"])
-def check_task_completion(id):
-    i = 0
-    while i < len(tasks_list):
-
-        if tasks_list[i]["id"] == int(id):
-            tasks_list[i]["isDone"] = "True"
+            tasks_list.append(new_task)
             update_tasks_txt()
-            return 'Success', 200
-        i += 1
-    return 'Task not found', 404
+
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(str(new_task).encode('utf8'))
+
+        # Отметка о выполнении задачи
+        else:
+            id = self.path.split("/")[2]
+            if id.isdigit():
+                i = 0
+                while i < len(tasks_list):
+                    if tasks_list[i]["id"] == int(id):
+                        tasks_list[i]["isDone"] = "True"
+                        update_tasks_txt()
+                        self.send_response(200)
+                        return
+                    i += 1
+                self.send_response(404)
+
+    # Получение списка всех задач
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(str(tasks_list).encode('utf8'))
 
 
-if __name__ == "__main__":
+def run():
+    server_address = ('127.0.0.1', 5000)
+    httpd = HTTPServer(server_address, HTTPServer_RequestHandler)
     update_tasks_list()
-    app.run()
+    httpd.serve_forever()
+
+
+run()
