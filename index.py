@@ -34,7 +34,6 @@ class HTTPServer_RequestHandler(BaseHTTPRequestHandler):
 
             content_length = int(self.headers['Content-Length'])  # <--- Gets the size of data
             data = json.loads(self.rfile.read(content_length).decode("utf-8"))  # <--- Gets the data itself
-            print(data)
 
             new_task = {
                 "title": data["title"],
@@ -67,10 +66,11 @@ class HTTPServer_RequestHandler(BaseHTTPRequestHandler):
 
     # Получение списка всех задач
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "text/plain")
-        self.end_headers()
-        self.wfile.write(str(tasks_list).encode('utf8'))
+        if self.path == "/tasks":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(str(tasks_list).encode('utf8'))
 
 
 def run():
